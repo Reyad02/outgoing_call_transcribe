@@ -12,10 +12,8 @@ from dotenv import load_dotenv
 
 from twilio_transcriber import TwilioTranscriber
 
-# Load environment variables
 load_dotenv()
 
-# Flask settings
 PORT = 5000
 DEBUG = False
 VOICE_ROUTE = '/voice'
@@ -30,7 +28,7 @@ TARGET_NUMBER = os.getenv('TARGET_NUMBER')
 client = Client(api_key, api_secret, account_sid)
 
 # ngrok authentication
-ngrok.set_auth_token(os.getenv("NGROK_AUTHTOKEN"))
+# ngrok.set_auth_token(os.getenv("NGROK_AUTHTOKEN"))
 
 # Flask + WebSocket app
 app = Flask(__name__)
@@ -38,37 +36,62 @@ sock = Sock(app)
 
 @app.route(VOICE_ROUTE, methods=["POST"])
 def voice_response():
-    # TwiML response for outbound call
     xml = f"""
 <Response>
     <Say>Speak now. Your voice will be transcribed.</Say>
     <Connect>
-        <Stream url="wss://{request.host}{WEBSOCKET_ROUTE}" />
+        <Stream url="wss://b2f1f48896d9.ngrok-free.app{WEBSOCKET_ROUTE}" />
     </Connect>
 </Response>
 """.strip()
     return Response(xml, mimetype='text/xml')
 
+# @sock.route(WEBSOCKET_ROUTE)
+# def transcription_socket(ws):
+#     transcriber = TwilioTranscriber()
+#     while True:
+#         data = json.loads(ws.receive())
+#         match data["event"]:
+#             case "connected":
+#                 transcriber.connect()
+#                 print("Transcriber connected")
+#             case "start":
+#                 print("Call started")
+#             case "media":
+#                 payload_b64 = data["media"]["payload"]
+#                 # print(f"Media received: {payload_b64} ")
+#                 # print(f"\n Media received: {len(payload_b64)} bytes \n")
+#                 payload_mulaw = base64.b64decode(payload_b64)
+#                 # print("Media received", len(payload_mulaw), "bytes", payload_mulaw[:20])
+#                 transcriber.stream(payload_mulaw)
+#             case "stop":
+#                 print("Call ended")
+#                 transcriber.close()
+#                 break
+
+
 @sock.route(WEBSOCKET_ROUTE)
 def transcription_socket(ws):
     transcriber = TwilioTranscriber()
+    transcriber.connect()
+
     while True:
         data = json.loads(ws.receive())
+
         match data["event"]:
             case "connected":
-                transcriber.connect()
                 print("Transcriber connected")
             case "start":
                 print("Call started")
             case "media":
                 payload_b64 = data["media"]["payload"]
-                payload_mulaw = base64.b64decode(payload_b64)
-                print("Media received", len(payload_mulaw), "bytes", payload_mulaw[:20])
-                transcriber.stream(payload_mulaw)
+                payload_bytes = base64.b64decode(payload_b64)
+                transcriber.stream(payload_bytes)
             case "stop":
                 print("Call ended")
                 transcriber.close()
                 break
+
 
 def run_flask():
     app.run(host="0.0.0.0", port=PORT, debug=DEBUG, use_reloader=False)
@@ -76,8 +99,8 @@ def run_flask():
 if __name__ == "__main__":
     try:
         # Start ngrok tunnel
-        listener = ngrok.forward(f"http://localhost:{PORT}")
-        NGROK_URL = listener.url()
+        # listener = ngrok.forward(f"http://localhost:{PORT}")
+        NGROK_URL = "https://b2f1f48896d9.ngrok-free.app"
         print(f"Ngrok tunnel running at: {NGROK_URL}")
 
         # Start Flask app in a background thread

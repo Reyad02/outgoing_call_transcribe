@@ -4,3 +4,7 @@ flask-sock>=0.7.0
 ngrok>=1.0.0
 python-dotenv>=1.0.1
 twilio>=8.13.0
+deepgram-sdk
+pydub 
+websockets>=11.0.3
+audioop-lts
