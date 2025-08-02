@@ -40,7 +40,7 @@ def voice_response():
 <Response>
     <Say>Speak now. Your voice will be transcribed.</Say>
     <Connect>
-        <Stream url="wss://b2f1f48896d9.ngrok-free.app{WEBSOCKET_ROUTE}" />
+        <Stream url="wss://a80f566262ce.ngrok-free.app{WEBSOCKET_ROUTE}" />
     </Connect>
 </Response>
 """.strip()
@@ -100,7 +100,7 @@ if __name__ == "__main__":
     try:
         # Start ngrok tunnel
         # listener = ngrok.forward(f"http://localhost:{PORT}")
-        NGROK_URL = "https://b2f1f48896d9.ngrok-free.app"
+        NGROK_URL = "https://a80f566262ce.ngrok-free.app"
         print(f"Ngrok tunnel running at: {NGROK_URL}")
 
         # Start Flask app in a background thread

@@ -49,7 +49,7 @@ class TwilioTranscriber:
         self.active = False
 
     def on_begin(self, _: Type[StreamingClient], event: BeginEvent):
-        logger.info(f"🚀 Session started: {event.id}")
+        logger.info(f"Session started: {event.id}")
         self.active = True
 
     def on_turn(self, _: Type[StreamingClient], event: TurnEvent):
@@ -67,11 +67,11 @@ class TwilioTranscriber:
             print(f"⌛ {event.transcript}", end='', flush=True)
 
     def on_terminated(self, _: Type[StreamingClient], event: TerminationEvent):
-        logger.info(f"🛑 Session ended after {event.audio_duration_seconds:.2f}s")
+        logger.info(f"Session ended after {event.audio_duration_seconds:.2f}s")
         self.active = False
 
     def on_error(self, _: Type[StreamingClient], error: StreamingError):
-        logger.error(f"❌ Error: {error}")
+        logger.error(f"Error: {error}")
         self.active = False
 
     def connect(self):
@@ -83,7 +83,8 @@ class TwilioTranscriber:
                     format_turns=True,
                 )
             )
-            logger.info("🔌 Connected to AssemblyAI")
+            # self.client.start()  # <== ADD THIS LINE
+            logger.info("Connected to AssemblyAI")
         except Exception as e:
             logger.error(f"Connection failed: {e}")
             raise
@@ -94,7 +95,7 @@ class TwilioTranscriber:
             return
 
         self.audio_buffer.extend(audio_data)
-        logger.debug(f"📥 Received {len(audio_data)} bytes (Total buffer: {len(self.audio_buffer)} bytes)")
+        logger.debug(f"Received {len(audio_data)} bytes (Total buffer: {len(self.audio_buffer)} bytes)")
 
         # Send chunks when enough data is available
         while len(self.audio_buffer) >= self.min_chunk_size:
@@ -102,7 +103,7 @@ class TwilioTranscriber:
             try:
                 self.client.stream(chunk)
                 self.audio_buffer = self.audio_buffer[self.min_chunk_size:]
-                logger.debug(f"📤 Sent {len(chunk)} bytes")
+                logger.debug(f"Sent {len(chunk)} bytes")
             except Exception as e:
                 logger.error(f"Streaming error: {e}")
                 break
@@ -110,8 +111,8 @@ class TwilioTranscriber:
     def close(self):
         """Flush buffer and close connection"""
         if len(self.audio_buffer) > 0:
-            logger.info(f"🚧 Flushing {len(self.audio_buffer)} remaining bytes")
+            logger.info(f"Flushing {len(self.audio_buffer)} remaining bytes")
             self.client.stream(bytes(self.audio_buffer))
         
         self.client.disconnect(terminate=True)
-        logger.info("🔌 Disconnected from AssemblyAI")
+        logger.info("Disconnected from AssemblyAI")
